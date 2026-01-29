@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include "led_config.h"
 #include "led_core.h"
 #include "dev_temp.h"
@@ -19,12 +20,26 @@ volatile LEDState ledstate = {
 
 void setup()
 {
-  Serial.begin(115200);                                                                                           
+  Serial.begin(115200);
 
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
 
   fill_solid(leds, NUM_LEDS, CRGB::Black);
   FastLED.show();
+
+  // Disable WiFi power saving for better responsiveness
+  homeSpan.setWifiBegin([](const char *ssid, const char *pwd) {
+    WiFi.begin(ssid, pwd);
+    WiFi.setSleep(false);
+  });
+
+  // Log connection events for debugging
+  homeSpan.setConnectionCallback([](int count) {
+    Serial.printf("*** WiFi connection event #%d - RSSI: %d dBm\n", count, WiFi.RSSI());
+  });
+
+  // Enable WiFi rescan for better handling of extenders/mesh networks
+  homeSpan.enableWiFiRescan();
 
   homeSpan.setStatusPin(2);
   homeSpan.begin(Category::Bridges, "Desk Bridge");
@@ -33,11 +48,11 @@ void setup()
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
 
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Identify();
-    new DEV_TEMP();
-    new DEV_HUMID();
+  // new SpanAccessory();
+  //   new Service::AccessoryInformation();
+  //     new Characteristic::Identify();
+  //   new DEV_TEMP();
+  //   new DEV_HUMID();
 
   new SpanAccessory();
     new Service::AccessoryInformation();
