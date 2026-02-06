@@ -12,14 +12,14 @@ constexpr float LED_TRANSITION_SPEED = 0.05;
 
 extern CRGB leds[];
 
-struct LEDState {
-  float currentH, targetH;
-  float currentS, targetS;
-  float currentV, targetV;
-  bool currentPower, targetPower;
-  int animationMode;
-};
+// struct LEDState {
+//   float currentH, targetH;
+//   float currentS, targetS;
+//   float currentV, targetV;
+//   bool currentPower, targetPower;
+//   int animationMode;
+// };
 
-extern volatile LEDState ledstate;
+// extern volatile LEDState ledstate;
 
 #endif

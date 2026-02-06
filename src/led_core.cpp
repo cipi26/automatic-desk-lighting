@@ -1,6 +1,3 @@
-#ifndef LED_CORE_cpp
-#define LED_CORE_cpp
-
 #include <FastLED.h>
 #include "led_config.h"
 
@@ -70,5 +67,3 @@ void transitionColors() {
       FastLED.show();
     }
   }
-
-#endif
