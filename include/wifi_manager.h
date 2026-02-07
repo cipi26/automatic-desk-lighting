@@ -2,4 +2,5 @@
 
 namespace wifi_manager {
   void init();
+  int isConnected();
 }

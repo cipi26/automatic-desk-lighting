@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "led_strip.h"
 #include "wifi_manager.h"
+#include "ota.h"
 
 void setup()
 {
@@ -13,6 +14,6 @@ void setup()
 
 void loop()
 {
-  
+  ota::tick();
   delay(1);
 }
