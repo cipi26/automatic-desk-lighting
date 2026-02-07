@@ -12,7 +12,7 @@ namespace ota {
     {
       WiFiClientSecure client;
       HTTPClient http;
-      DynamicJsonDocument doc(2048);
+      JsonDocument doc;
   
       client.setInsecure();
       http.begin(client, manifest_url);
