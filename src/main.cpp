@@ -14,13 +14,13 @@ void setup()
 {
   Serial.begin(115200);
 
-  #ifdef APP_ENV_DEV
+#ifdef APP_ENV_DEV
   uint32_t t0 = millis();
   while (!Serial && millis() - t0 < 1500)
   {
     delay(10);
   }
-  #endif
+#endif
 
   led_strip::init();
   wifi_manager::init();
