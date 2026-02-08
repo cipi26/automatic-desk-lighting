@@ -2,6 +2,7 @@
 #include "led_strip.h"
 #include "wifi_manager.h"
 #include "serial_console.h"
+#include "oled.h"
 
 #ifdef APP_ENV_PROD
 #include "ota.h"
@@ -17,6 +18,7 @@ void setup()
 
   led_strip::init();
   wifi_manager::init();
+  oled::init();
 }
 
 void loop()
@@ -29,6 +31,8 @@ void loop()
   dev_ota::tick();
   serial_console::tick();
 #endif
+
+  oled::tick();
 
   delay(1);
 }
