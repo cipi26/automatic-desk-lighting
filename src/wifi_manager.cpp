@@ -1,6 +1,10 @@
 #include <WiFi.h>
 #include <Preferences.h>
 
+#ifdef APP_ENV_DEV
+#include <dev_ota.h>
+#endif
+
 static Preferences preferences;
 
 static void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info)
@@ -13,6 +17,12 @@ static void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info)
 
   case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     Serial.printf("[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("[WiFi] RSSI: %d dBm\n", WiFi.RSSI());
+
+    #ifdef APP_ENV_DEV
+    dev_ota::init();
+    #endif
+
     break;
 
   case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -50,7 +60,8 @@ namespace wifi_manager
 
     // Connect to WiFi network
     WiFi.begin(ssid.c_str(), pass.c_str());
-    Serial.printf("[WiFi] Connecting to %d..", ssid.c_str());
+    Serial.printf("[WiFi] Connecting to %s..", ssid.c_str());
+    Serial.println("");
   }
 
   bool isConnected()

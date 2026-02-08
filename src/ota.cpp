@@ -1,6 +1,7 @@
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include "ota.h"
+#include "wifi_manager.h"
 #include <ArduinoJson.h>
 
 namespace ota {
@@ -8,8 +9,8 @@ namespace ota {
   {
     static uint32_t last = 0;
 
-    // if(millis() - last >= 3600000)
-    // {
+    if(millis() - last >= 3600000 && wifi_manager::isConnected())
+    {
       WiFiClientSecure client;
       HTTPClient http;
       JsonDocument doc;
@@ -51,6 +52,6 @@ namespace ota {
       Serial.println(description);
 
       last = millis();
-    // }
+    }
   }
 }
