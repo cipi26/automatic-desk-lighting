@@ -39,16 +39,16 @@ namespace ota {
         return;
       }
 
-      int build = doc["build"] | 0;
+      int version = doc["version"] | 0;
       const char* url = doc["url"] | "";
-      const char* sha = doc["sha256"] | "";
+      const char* description = doc["description"] | "";
 
-      Serial.print("Build: ");
-      Serial.println(build);
+      Serial.print("Version: ");
+      Serial.println(version);
       Serial.print("Firmware URL: ");
       Serial.println(url);
-      Serial.print("sha256: ");
-      Serial.println(sha);
+      Serial.print("Description: ");
+      Serial.println(description);
 
       last = millis();
     }
