@@ -1,0 +1,5 @@
+{
+  "version": "1.0.0",
+  "firmware_url": "https://example.com/firmware/desk-lightning-1.0.0.bin",
+  "description": "Automatic Desk Lightning firmware"
+}
