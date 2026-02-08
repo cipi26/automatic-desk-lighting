@@ -8,8 +8,8 @@ namespace ota {
   {
     static uint32_t last = 0;
 
-    if(millis() - last >= 3600000)
-    {
+    // if(millis() - last >= 3600000)
+    // {
       WiFiClientSecure client;
       HTTPClient http;
       JsonDocument doc;
@@ -39,7 +39,7 @@ namespace ota {
         return;
       }
 
-      int version = doc["version"] | 0;
+      const char* version = doc["version"] | "";
       const char* url = doc["url"] | "";
       const char* description = doc["description"] | "";
 
@@ -51,6 +51,6 @@ namespace ota {
       Serial.println(description);
 
       last = millis();
-    }
+    // }
   }
 }
