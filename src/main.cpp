@@ -3,6 +3,7 @@
 #include "wifi_manager.h"
 #include "serial_console.h"
 #include "oled.h"
+#include "buttons.h"
 
 #ifdef APP_ENV_PROD
 #include "ota.h"
@@ -19,6 +20,7 @@ void setup()
   led_strip::init();
   wifi_manager::init();
   oled::init();
+  buttons::init();
 }
 
 void loop()
@@ -33,6 +35,13 @@ void loop()
 #endif
 
   oled::tick();
+  buttons::tick();
+
+  for (buttons::Event e = buttons::popEvent(); e != buttons::Event::None; e = buttons::popEvent())
+  {
+    if (e == buttons::Event::NavClick)
+      oled::onAction(oled::Action::Next);
+  }
 
   delay(1);
 }
