@@ -7,4 +7,6 @@ inline constexpr u_int16_t NUM_LEDS = 60;
 
 namespace led_strip {
   void init();
+  void tick();
+  void togglePower();
 }

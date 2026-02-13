@@ -1,3 +1,4 @@
+#pragma once
 #include <OneButton.h>
 
 namespace buttons {
@@ -6,7 +7,6 @@ namespace buttons {
     NavClick,
     NavLongPress,
     SelectClick,
-    SelectLongPress
   };
 
   void init();

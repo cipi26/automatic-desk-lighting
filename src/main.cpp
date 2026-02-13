@@ -36,11 +36,14 @@ void loop()
 
   oled::tick();
   buttons::tick();
+  led_strip::tick();
 
   for (buttons::Event e = buttons::popEvent(); e != buttons::Event::None; e = buttons::popEvent())
   {
     if (e == buttons::Event::NavClick)
       oled::onAction(oled::Action::Next);
+    else if(e == buttons::Event::SelectClick)
+      oled::onAction(oled::Action::Enter);
   }
 
   delay(1);

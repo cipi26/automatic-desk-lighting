@@ -1,13 +1,12 @@
-#pragma once
 #include <OneButton.h>
 #include "buttons.h"
 
 namespace {
-  constexpr uint8_t PIN_NAV = 18;
-  constexpr uint8_t PIN_SELECT = 19;
+  constexpr uint8_t PIN_NAV = 19;
+  constexpr uint8_t PIN_SELECT = 18;
 
   OneButton navButton(PIN_NAV, true);
-  OneButton selectButton(PIN_SELECT, false);
+  OneButton selectButton(PIN_SELECT, true);
 
   constexpr uint8_t QSIZE = 8;
   buttons::Event q[QSIZE];
@@ -25,20 +24,18 @@ namespace {
   void onNavClick() { push(buttons::Event::NavClick); }
   void onNavLong() { push(buttons::Event::NavLongPress); }
   void onSelectClick() { push(buttons::Event::SelectClick); }
-  void onSelectLong() { push(buttons::Event::SelectLongPress); }
 }
 
 namespace buttons {
   void init()
   {
     pinMode(PIN_NAV, INPUT_PULLUP);
-    // pinMode(PIN_SELECT, INPUT_PULLUP);
+    pinMode(PIN_SELECT, INPUT_PULLUP);
 
     navButton.attachClick(onNavClick);
     navButton.attachLongPressStart(onNavLong);
 
     selectButton.attachClick(onSelectClick);
-    selectButton.attachLongPressStart(onSelectLong);
   }
 
   void tick()
