@@ -4,6 +4,7 @@
 #include "serial_console.h"
 #include "oled.h"
 #include "buttons.h"
+#include "clock_manager.h"
 
 #ifdef APP_ENV_PROD
 #include "ota.h"
@@ -34,16 +35,24 @@ void loop()
   serial_console::tick();
 #endif
 
-  oled::tick();
   buttons::tick();
+  clock_manager::tick();
+  oled::tick();
   led_strip::tick();
 
   for (buttons::Event e = buttons::popEvent(); e != buttons::Event::None; e = buttons::popEvent())
   {
     if (e == buttons::Event::NavClick)
-      oled::onAction(oled::Action::Next);
-    else if(e == buttons::Event::SelectClick)
-      oled::onAction(oled::Action::Enter);
+      oled::onAction(oled::Action::Down);
+    else if (e == buttons::Event::NavLongPress)
+      oled::onAction(oled::Action::Back);
+    else if (e == buttons::Event::SelectClick)
+    {
+      if (oled::getCurrentOption() == oled::MenuOption::Power && oled::getCurrentScreen() == oled::Screen::Menu)
+        led_strip::togglePower();
+        
+      oled::onAction(oled::Action::Select);
+    }
   }
 
   delay(1);

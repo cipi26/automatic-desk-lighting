@@ -2,22 +2,157 @@
 #include <Wire.h>
 #include "oled.h"
 
-//temporary
-#include "led_strip.h"
+using namespace oled;
 
 namespace
 {
   U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
-  constexpr int NUM_ITEMS = 6;
-  const char *menu_items[NUM_ITEMS] = {"Dashboard", "Park Sensor", "Turbo Gauge", "Toggle LED", "Brightness", "Fireworks"};
-  uint8_t currentIndex = 0;
-  bool update = true;
-
-  void nextIndex(uint8_t &idx, uint8_t count)
+  struct MenuOptionData
   {
-    idx = (idx + 1) % count;
-    update = true;
+    const uint8_t *icon;
+    const char *name;
+    Screen parentScreen;
+  };
+
+  struct ScreenHistoryData
+  {
+    Screen screen;
+    uint8_t index;
+  };
+
+  const MenuOptionData MENU_OPTIONS[] = {
+      {
+          nullptr,
+          "Power",
+          Screen::Menu,
+      },
+      {nullptr, "Colors", Screen::Menu},
+      {nullptr, "Animations", Screen::Menu},
+      {nullptr, "Timer", Screen::Menu},
+      {nullptr, "WiFi", Screen::Menu},
+      {nullptr, "Purple", Screen::Colors},
+      {nullptr, "Warm White", Screen::Colors},
+      {nullptr, "Static", Screen::Animations},
+  };
+
+  ScreenHistoryData screenHistory[5];
+  uint8_t historyDepth = 0;
+
+  Screen currentScreen = Screen::Dashboard;
+  MenuOption currentMenuOptions[10];
+  uint8_t currentIndex = 0, optionsCount = 0;
+
+  bool render = true;
+
+  void ScrollMenu()
+  {
+    if (!optionsCount)
+      return;
+    currentIndex = (currentIndex + 1) % optionsCount;
+    render = true;
+  }
+
+  void buildCurrentOptions()
+  {
+    optionsCount = 0;
+    currentIndex = 0;
+    for (uint8_t i = 0; i < (uint8_t)MenuOption::COUNT; i++)
+      if (MENU_OPTIONS[i].parentScreen == currentScreen)
+        currentMenuOptions[optionsCount++] = (MenuOption)i;
+  }
+
+  void pushScreen(Screen screen)
+  {
+    if (historyDepth < 5)
+    {
+      screenHistory[historyDepth].screen = currentScreen;
+      screenHistory[historyDepth++].index = currentIndex;
+    }
+    currentScreen = screen;
+    buildCurrentOptions();
+    render = true;
+  }
+
+  void popScreen()
+  {
+    if (historyDepth > 0)
+    {
+      currentScreen = screenHistory[--historyDepth].screen;
+      buildCurrentOptions();
+      currentIndex = screenHistory[historyDepth].index;
+    }
+    else
+    {
+      currentScreen = Screen::Dashboard;
+    }
+    render = true;
+  }
+
+  void renderMenu()
+  {
+    uint8_t prevIndex = (currentIndex - 1 + optionsCount) % optionsCount;
+    uint8_t nextIndex = (currentIndex + 1 + optionsCount) % optionsCount;
+
+    u8g2.clearBuffer();
+    if (optionsCount <= 2 && prevIndex < currentIndex || optionsCount > 2)
+    {
+      u8g2.setFont(u8g2_font_7x14_tr);
+      u8g2.drawStr(26, 15, MENU_OPTIONS[(uint8_t)currentMenuOptions[prevIndex]].name);
+    }
+
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(26, 37, MENU_OPTIONS[(uint8_t)currentMenuOptions[currentIndex]].name);
+
+    u8g2.drawRFrame(0, 22, 128, 21, 4);
+
+    if (optionsCount <= 2 && nextIndex > currentIndex || optionsCount > 2)
+    {
+      u8g2.setFont(u8g2_font_7x14_tr);
+      u8g2.drawStr(26, 59, MENU_OPTIONS[(uint8_t)currentMenuOptions[nextIndex]].name);
+    }
+
+    u8g2.sendBuffer();
+  }
+
+  void renderDashboard()
+  {
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_logisoso24_tn);
+
+    const char *t = "21:43";
+    int w = u8g2.getStrWidth(t);
+    int x = (128 - w) / 2;
+
+    int ascend = u8g2.getAscent();
+    int descend = u8g2.getDescent();
+    int h = ascend - descend;
+    int y = (64 - h) / 2 + ascend;
+
+    u8g2.drawStr(x, y, t);
+    u8g2.sendBuffer();
+  }
+
+  void onSelectActionByOption(MenuOption option)
+  {
+    switch (option)
+    {
+    case MenuOption::Colors:
+      pushScreen(Screen::Colors);
+      break;
+
+    case MenuOption::Animations:
+      pushScreen(Screen::Animations);
+      break;
+
+    case MenuOption::Timer:
+      pushScreen(Screen::Timer);
+      break;
+
+    case MenuOption::WiFi:
+      pushScreen(Screen::WiFi);
+      break;
+    }
   }
 }
 
@@ -33,35 +168,57 @@ namespace oled
   {
     switch (a)
     {
-    case Action::Next:
-      nextIndex(currentIndex, NUM_ITEMS);
+    case Action::Down:
+      ScrollMenu();
       break;
-    case Action::Enter:
-      if(currentIndex == 3)
-        led_strip::togglePower();
+    case Action::Back:
+      popScreen();
+      break;
+    case Action::Select:
+      if (getCurrentScreen() == Screen::Dashboard)
+        pushScreen(Screen::Menu);
+      else
+        onSelectActionByOption(currentMenuOptions[currentIndex]);
+      break;
     }
+  }
+
+  Screen getCurrentScreen()
+  {
+    return currentScreen;
+  }
+
+  MenuOption getCurrentOption()
+  {
+    return currentMenuOptions[currentIndex];
+  }
+
+  void returnToDashboard()
+  {
+    currentScreen = Screen::Dashboard;
+    historyDepth = 0;
+    render = true;
   }
 
   void tick()
   {
+    if (!render)
+      return;
 
-    if(update)
+    render = false;
+
+    switch (currentScreen)
     {
-      u8g2.clearBuffer();
-      u8g2.setFont(u8g2_font_7x14_tr);
-      u8g2.drawStr(26, 15, menu_items[(currentIndex - 1 + NUM_ITEMS) % NUM_ITEMS]);
+    case Screen::Dashboard:
+      renderDashboard();
+      break;
 
-      u8g2.setFont(u8g2_font_7x14B_tr);
-      u8g2.drawStr(26, 37, menu_items[currentIndex]);
-
-      u8g2.drawRFrame(0, 22, 128, 21, 4);
-
-      u8g2.setFont(u8g2_font_7x14_tr);
-      u8g2.drawStr(26, 59, menu_items[(currentIndex + 1 + NUM_ITEMS) % NUM_ITEMS]);
-
+    default:
+      if (optionsCount)
+        renderMenu();
+      else
+        u8g2.clearBuffer();
       u8g2.sendBuffer();
-
-      update = false;
     }
   }
 }
