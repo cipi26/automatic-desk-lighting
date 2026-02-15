@@ -1,6 +1,7 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "oled.h"
+#include "clock_manager.h"
 
 using namespace oled;
 
@@ -42,6 +43,7 @@ namespace
   Screen currentScreen = Screen::Dashboard;
   MenuOption currentMenuOptions[10];
   uint8_t currentIndex = 0, optionsCount = 0;
+  uint8_t lastMin = 255;
 
   bool render = true;
 
@@ -89,6 +91,14 @@ namespace
     render = true;
   }
 
+  void centerString(u8g2_uint_t y, const char *s)
+  {
+    int w = u8g2.getStrWidth(s);
+    int x = (128 - w) / 2;
+
+    u8g2.drawStr(x, y, s);
+  }
+
   void renderMenu()
   {
     uint8_t prevIndex = (currentIndex - 1 + optionsCount) % optionsCount;
@@ -97,18 +107,18 @@ namespace
     u8g2.clearBuffer();
     if (optionsCount <= 2 && prevIndex < currentIndex || optionsCount > 2)
     {
-      u8g2.setFont(u8g2_font_7x14_tr);
+      u8g2.setFont(u8g2_font_profont15_tr);
       u8g2.drawStr(26, 15, MENU_OPTIONS[(uint8_t)currentMenuOptions[prevIndex]].name);
     }
 
-    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.setFont(u8g2_font_profont17_tr);
     u8g2.drawStr(26, 37, MENU_OPTIONS[(uint8_t)currentMenuOptions[currentIndex]].name);
 
     u8g2.drawRFrame(0, 22, 128, 21, 4);
 
     if (optionsCount <= 2 && nextIndex > currentIndex || optionsCount > 2)
     {
-      u8g2.setFont(u8g2_font_7x14_tr);
+      u8g2.setFont(u8g2_font_profont15_tr);
       u8g2.drawStr(26, 59, MENU_OPTIONS[(uint8_t)currentMenuOptions[nextIndex]].name);
     }
 
@@ -120,16 +130,19 @@ namespace
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_logisoso24_tn);
 
-    const char *t = "21:43";
-    int w = u8g2.getStrWidth(t);
-    int x = (128 - w) / 2;
-
     int ascend = u8g2.getAscent();
     int descend = u8g2.getDescent();
     int h = ascend - descend;
     int y = (64 - h) / 2 + ascend;
 
-    u8g2.drawStr(x, y, t);
+    centerString(y, clock_manager::getFormattedTime());
+
+    u8g2.setFont(u8g2_font_prospero_bold_nbp_tr);
+    centerString(y + 20, clock_manager::getFormattedDate());
+
+    u8g2.setFont(u8g2_font_profont12_tr);
+    centerString(u8g2.getAscent() - u8g2.getDescent(), "Purple - ON");
+
     u8g2.sendBuffer();
   }
 
@@ -152,6 +165,21 @@ namespace
     case MenuOption::WiFi:
       pushScreen(Screen::WiFi);
       break;
+    }
+  }
+
+  void renderControl()
+  {
+    switch (currentScreen)
+    {
+    case Screen::Dashboard:
+      tm t;
+      if (clock_manager::getClock(t))
+        if (lastMin != t.tm_min)
+        {
+          lastMin = t.tm_min;
+          render = true;
+        }
     }
   }
 }
@@ -202,6 +230,8 @@ namespace oled
 
   void tick()
   {
+    renderControl();
+
     if (!render)
       return;
 
@@ -213,12 +243,25 @@ namespace oled
       renderDashboard();
       break;
 
+    case Screen::WiFi:
+      u8g2.clearBuffer();
+      u8g2.setDrawColor(1);
+      u8g2.drawBox(0, 54, 128, 10); // Black bar
+      u8g2.setDrawColor(0);         // White text on black
+      u8g2.setFont(u8g2_font_profont10_tr);
+      u8g2.drawStr(2, 62, "Purple - ON");
+      u8g2.setDrawColor(1); // Reset
+      u8g2.sendBuffer();
+      break;
+
     default:
       if (optionsCount)
         renderMenu();
       else
+      {
         u8g2.clearBuffer();
-      u8g2.sendBuffer();
+        u8g2.sendBuffer();
+      }
     }
   }
 }
