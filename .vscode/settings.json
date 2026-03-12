@@ -1,0 +1,18 @@
+{
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "idf.buildPath": "${workspaceFolder}/build",
+  "idf.openOcdConfigs": ["board/esp32-wrover-kit-3.3v.cfg"],
+  "idf.port": "/dev/tty.usbserial-0001",
+  "idf.currentSetup": "/Users/ciprianstefan/.espressif/v5.5.3/esp-idf",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32"
+  },
+  "clangd.path": "/Users/ciprianstefan/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/Users/ciprianstefan/embedded-projects/automatic-desk-lighting/build"
+  ],
+  "idf.flashType": "UART",
+  "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+}
