@@ -7,7 +7,7 @@ void anim_sequence_init(led_ctx_t *ctx, anim_sequence_state_t *state,
                         uint8_t start_index, uint8_t end_index,
                         uint32_t interval_ms, led_hsv_t color);
 
-bool anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state);
+anim_status_t anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state);
 
 void anim_refresh(led_ctx_t *ctx);
 

@@ -32,7 +32,7 @@ typedef enum { LEFT_TO_RIGHT, RIGHT_TO_LEFT } anim_direction_t;
 
 
 typedef struct {
-  uint8_t start, end, current;
+  int8_t start, end, current;
   led_hsv_t color;
   anim_direction_t direction;
   uint32_t interval_ms;

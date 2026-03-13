@@ -5,12 +5,17 @@
 #include <stdint.h>
 
 void anim_sequence_init(led_ctx_t *ctx, anim_sequence_state_t *state,
-                        uint8_t start_index, uint8_t end_index,
+                        int8_t start_index, int8_t end_index,
                         uint32_t interval_ms, led_hsv_t color) {
   if (start_index >= ctx->nr_leds)
     start_index = ctx->nr_leds - 1;
   if (end_index >= ctx->nr_leds)
     end_index = ctx->nr_leds - 1;
+
+  if (start_index < 0)
+    start_index = 0;
+  if (end_index < 0)
+    end_index = 0;
 
   state->last_tick = pdTICKS_TO_MS(xTaskGetTickCount());
   state->current = start_index;
@@ -27,13 +32,13 @@ anim_status_t anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state) {
   if (now - state->last_tick >= state->interval_ms) {
     state->last_tick = now;
 
+    if ((state->direction == LEFT_TO_RIGHT && state->current > state->end) ||
+        (state->direction == RIGHT_TO_LEFT && state->current < state->end))
+      return ANIM_DONE;
+
     ctx->framebuffer[state->current] = state->color;
 
     state->current += 1 * (state->direction == LEFT_TO_RIGHT ? 1 : -1);
-
-    if ((state->direction == LEFT_TO_RIGHT && state->current >= state->end) ||
-        (state->direction == RIGHT_TO_LEFT && state->current <= state->end))
-      return ANIM_DONE;
 
     return ANIM_UPDATED;
   }

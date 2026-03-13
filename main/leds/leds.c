@@ -2,9 +2,10 @@
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
 #include "freertos/task.h"
-#include "led_animation.h"
+#include "led_animation_api.h"
 #include "led_animation_types.h"
 #include "led_strip_rmt.h"
+#include "leds/leds_animations.h"
 
 #define NUM_LEDS 60
 
@@ -38,18 +39,13 @@ void leds_init(void) {
 void leds_task(void *pvParameters) {
   fill_leds(&ctx, NUM_LEDS, (led_hsv_t){.h = 0, .s = 0, .v = 0});
 
-  anim_sequence_state_t left_side;
-  anim_sequence_init(&ctx, &left_side, 29, 0, 20, initialColor);
+  vTaskDelay(pdMS_TO_TICKS(1000));
 
-  anim_sequence_state_t right_side;
-  anim_sequence_init(&ctx, &right_side, 30, 59, 20, initialColor);
+  anim_startup_state_t startup_state = anim_startup_init(&ctx, initialColor);
 
   while (1) {
     if (state.startup_anim_status != ANIM_DONE) {
-      state.startup_anim_status = anim_sequence_tick(&ctx, &left_side);
-      anim_sequence_tick(&ctx, &right_side);
-      if (state.startup_anim_status == ANIM_UPDATED)
-        anim_refresh(&ctx);
+      state.startup_anim_status = anim_startup_tick(&startup_state);
     }
     vTaskDelay(pdMS_TO_TICKS(10));
   }
