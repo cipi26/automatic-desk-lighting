@@ -1,3 +1,4 @@
+#include "led_animation_api.h"
 #include "esp_err.h"
 #include "freertos/projdefs.h"
 #include "led_animation_types.h"
@@ -23,28 +24,35 @@ void anim_sequence_init(led_ctx_t *ctx, anim_sequence_state_t *state,
   state->current = start_index;
   state->start = start_index;
   state->end = end_index;
+  state->status = ANIM_WAITING;
   state->direction = start_index <= end_index ? LEFT_TO_RIGHT : RIGHT_TO_LEFT;
   state->color = color;
   state->interval_ms = interval_ms;
 }
 
-anim_status_t anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state) {
+void anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state) {
+  if (state->status == ANIM_DONE)
+    return;
+
   uint32_t now = pdTICKS_TO_MS(xTaskGetTickCount());
 
   if (now - state->last_tick >= state->interval_ms) {
     state->last_tick = now;
 
     if ((state->direction == LEFT_TO_RIGHT && state->current > state->end) ||
-        (state->direction == RIGHT_TO_LEFT && state->current < state->end))
-      return ANIM_DONE;
+        (state->direction == RIGHT_TO_LEFT && state->current < state->end)) {
+      state->status = ANIM_DONE;
+      return;
+    }
 
     ctx->framebuffer[state->current] = state->color;
 
     state->current += 1 * (state->direction == LEFT_TO_RIGHT ? 1 : -1);
 
-    return ANIM_UPDATED;
+    state->status = ANIM_UPDATED;
+    return;
   }
-  return ANIM_WAITING;
+  state->status = ANIM_WAITING;
 }
 
 static uint8_t compute_gamma(uint8_t value) {
@@ -75,12 +83,15 @@ void fade_leds_init(anim_fade_leds_state_t *state, led_ctx_t *ctx,
   state->num_leds = num_leds;
   state->color = color;
   state->interval_ms = interval_ms;
+  state->status = ANIM_WAITING;
   state->last_tick = pdTICKS_TO_MS(xTaskGetTickCount());
   state->ctx = ctx;
 }
 
-anim_status_t fade_leds_tick(anim_fade_leds_state_t *state) {
-  anim_status_t status = ANIM_WAITING;
+void fade_leds_tick(anim_fade_leds_state_t *state) {
+  if (state->status == ANIM_DONE)
+    return;
+
   uint32_t now = pdTICKS_TO_MS(xTaskGetTickCount());
 
   if (now - state->last_tick >= state->interval_ms) {
@@ -96,16 +107,23 @@ anim_status_t fade_leds_tick(anim_fade_leds_state_t *state) {
 
         if (abs(to_brightness - from_brightness) < step_size) {
           state->ctx->framebuffer[i].v = to_brightness;
-          status = ANIM_UPDATED;
+          state->status = ANIM_UPDATED;
         } else if (from_brightness < to_brightness)
-          state->ctx->framebuffer[i].v += step_size, status = ANIM_UPDATED;
+          state->ctx->framebuffer[i].v += step_size,
+              state->status = ANIM_UPDATED;
         else
-          state->ctx->framebuffer[i].v -= step_size, status = ANIM_UPDATED;
+          state->ctx->framebuffer[i].v -= step_size,
+              state->status = ANIM_UPDATED;
       }
     }
-    if (status == ANIM_WAITING)
-      status = ANIM_DONE;
-  }
+    if (state->status == ANIM_WAITING) {
+      state->status = ANIM_DONE;
+      return;
+    }
 
-  return status;
+    if (state->status == ANIM_UPDATED) {
+      anim_refresh(state->ctx);
+    }
+  }
+  state->status = ANIM_WAITING;
 }

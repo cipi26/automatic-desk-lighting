@@ -20,12 +20,10 @@ typedef struct {
   led_hsv_t *framebuffer;
 } led_ctx_t;
 
-typedef enum { ANIM_WAITING, ANIM_UPDATED, ANIM_DONE } anim_status_t;
+typedef enum { ANIM_DONE, ANIM_WAITING, ANIM_UPDATED } anim_status_t;
 
 typedef struct {
   led_power_state_t power;
-  anim_status_t startup_anim_status;
-  anim_status_t shutdown_anim_status;
 } led_state_t;
 
 typedef enum { LEFT_TO_RIGHT, RIGHT_TO_LEFT } anim_direction_t;
@@ -37,6 +35,7 @@ typedef struct {
   anim_direction_t direction;
   uint32_t interval_ms;
   uint32_t last_tick;
+  anim_status_t status;
 } anim_sequence_state_t;
 
 typedef struct {
@@ -45,4 +44,5 @@ typedef struct {
   led_hsv_t color;
   uint32_t interval_ms;
   uint32_t last_tick;
+  anim_status_t status;
 } anim_fade_leds_state_t;

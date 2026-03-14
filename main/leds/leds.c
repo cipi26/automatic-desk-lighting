@@ -27,9 +27,7 @@ static led_hsv_t LEDS[NUM_LEDS];
 static led_ctx_t ctx = {
     .nr_leds = NUM_LEDS, .strip = &strip, .framebuffer = LEDS};
 
-static led_state_t state = {.power = LED_POWER_ON,
-                            .shutdown_anim_status = ANIM_DONE,
-                            .startup_anim_status = ANIM_DONE};
+static led_state_t state = {.power = LED_POWER_ON};
 
 void leds_init(void) {
   ESP_ERROR_CHECK(led_strip_new_rmt_device(&cfg, &rmt_cfg, &strip));
@@ -41,23 +39,16 @@ void leds_task(void *pvParameters) {
 
   vTaskDelay(pdMS_TO_TICKS(1000));
 
-  anim_startup_state_t startup_state = anim_startup_init(&ctx, initialColor);
-  anim_fade_leds_state_t fade_state;
-  anim_status_t fade = ANIM_WAITING;
+  anim_startup_state_t startup_state = {0};
+  anim_startup_init(&startup_state, &ctx, initialColor);
+
+  anim_fade_leds_state_t fade_state = {0};
   fade_leds_init(&fade_state, &ctx, NUM_LEDS, initialColor, 20);
 
   while (1) {
-    if (state.startup_anim_status != ANIM_DONE) {
-      state.startup_anim_status = anim_startup_tick(&startup_state);
-    }
+    // anim_startup_tick(&startup_state);
 
-    while (fade != ANIM_DONE) {
-      fade = fade_leds_tick(&fade_state);
-      if (fade == ANIM_UPDATED) {
-        anim_refresh(&ctx);
-        fade = ANIM_WAITING;
-      }
-    }
+    fade_leds_tick(&fade_state);
 
     vTaskDelay(pdMS_TO_TICKS(10));
   }
