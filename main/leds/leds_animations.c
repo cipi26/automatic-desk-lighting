@@ -16,8 +16,8 @@ void anim_startup_tick(anim_startup_state_t *state) {
   if (state->status == ANIM_DONE)
     return;
 
-  anim_sequence_tick(state->ctx, &state->left_side);
-  anim_sequence_tick(state->ctx, &state->right_side);
+  anim_sequence_tick(&state->left_side);
+  anim_sequence_tick(&state->right_side);
 
   if (state->left_side.status == ANIM_UPDATED ||
       state->right_side.status == ANIM_UPDATED) {

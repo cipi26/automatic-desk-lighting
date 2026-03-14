@@ -7,7 +7,7 @@ void anim_sequence_init(led_ctx_t *ctx, anim_sequence_state_t *state,
                         int8_t start_index, int8_t end_index,
                         uint32_t interval_ms, led_hsv_t color);
 
-void anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state);
+void anim_sequence_tick(anim_sequence_state_t *state);
 
 void anim_refresh(led_ctx_t *ctx);
 
@@ -17,3 +17,10 @@ void fade_leds_init(anim_fade_leds_state_t *state, led_ctx_t *ctx,
                     uint8_t num_leds, led_hsv_t color, uint32_t interval_ms);
 
 void fade_leds_tick(anim_fade_leds_state_t *state);
+
+void anim_sequence_fade_init(led_ctx_t *ctx, anim_sequence_fade_state_t *state,
+                             int8_t start_index, int8_t end_index,
+                             uint32_t interval_ms, uint8_t interval_brightness,
+                             uint8_t brightness_step_size, led_hsv_t color);
+
+void anim_sequence_fade_tick(anim_sequence_fade_state_t *state);
