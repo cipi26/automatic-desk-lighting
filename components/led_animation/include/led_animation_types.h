@@ -38,3 +38,11 @@ typedef struct {
   uint32_t interval_ms;
   uint32_t last_tick;
 } anim_sequence_state_t;
+
+typedef struct {
+  led_ctx_t *ctx;
+  uint8_t num_leds;
+  led_hsv_t color;
+  uint32_t interval_ms;
+  uint32_t last_tick;
+} anim_fade_leds_state_t;

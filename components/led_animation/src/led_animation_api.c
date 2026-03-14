@@ -2,7 +2,9 @@
 #include "freertos/projdefs.h"
 #include "led_animation_types.h"
 #include "led_strip.h"
+#include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 void anim_sequence_init(led_ctx_t *ctx, anim_sequence_state_t *state,
                         int8_t start_index, int8_t end_index,
@@ -45,10 +47,15 @@ anim_status_t anim_sequence_tick(led_ctx_t *ctx, anim_sequence_state_t *state) {
   return ANIM_WAITING;
 }
 
+static uint8_t compute_gamma(uint8_t value) {
+  return round(255 * pow(value / 255.0, 2.2));
+}
+
 void anim_refresh(led_ctx_t *ctx) {
   for (int i = 0; i < ctx->nr_leds; i++) {
     led_strip_set_pixel_hsv(*ctx->strip, i, ctx->framebuffer[i].h,
-                            ctx->framebuffer[i].s, ctx->framebuffer[i].v);
+                            ctx->framebuffer[i].s,
+                            compute_gamma(ctx->framebuffer[i].v));
   }
   led_strip_refresh(*ctx->strip);
 }
@@ -57,4 +64,48 @@ void fill_leds(led_ctx_t *ctx, uint8_t num_leds, led_hsv_t color) {
   for (int i = 0; i < num_leds; i++)
     ctx->framebuffer[i] = color;
   anim_refresh(ctx);
+}
+
+static const int step_size = 5;
+
+void fade_leds_init(anim_fade_leds_state_t *state, led_ctx_t *ctx,
+                    uint8_t num_leds, led_hsv_t color, uint32_t interval_ms) {
+  if (num_leds > ctx->nr_leds)
+    num_leds = ctx->nr_leds;
+  state->num_leds = num_leds;
+  state->color = color;
+  state->interval_ms = interval_ms;
+  state->last_tick = pdTICKS_TO_MS(xTaskGetTickCount());
+  state->ctx = ctx;
+}
+
+anim_status_t fade_leds_tick(anim_fade_leds_state_t *state) {
+  anim_status_t status = ANIM_WAITING;
+  uint32_t now = pdTICKS_TO_MS(xTaskGetTickCount());
+
+  if (now - state->last_tick >= state->interval_ms) {
+    state->last_tick = now;
+    uint8_t to_brightness = state->color.v;
+
+    for (int i = 0; i < state->num_leds; i++) {
+      uint8_t from_brightness = state->ctx->framebuffer[i].v;
+
+      if (abs(from_brightness - to_brightness) > 0) {
+        state->ctx->framebuffer[i].h = state->color.h;
+        state->ctx->framebuffer[i].s = state->color.s;
+
+        if (abs(to_brightness - from_brightness) < step_size) {
+          state->ctx->framebuffer[i].v = to_brightness;
+          status = ANIM_UPDATED;
+        } else if (from_brightness < to_brightness)
+          state->ctx->framebuffer[i].v += step_size, status = ANIM_UPDATED;
+        else
+          state->ctx->framebuffer[i].v -= step_size, status = ANIM_UPDATED;
+      }
+    }
+    if (status == ANIM_WAITING)
+      status = ANIM_DONE;
+  }
+
+  return status;
 }
