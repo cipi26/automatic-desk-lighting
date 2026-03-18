@@ -40,13 +40,13 @@ void leds_task(void *pvParameters) {
   vTaskDelay(pdMS_TO_TICKS(1000));
 
   anim_startup_state_t startup_state = {0};
-  // anim_startup_init(&startup_state, &ctx, initialColor);
+  anim_startup_init(&startup_state, &ctx, initialColor);
 
   anim_fade_leds_state_t fade_state = {0};
   // fade_leds_init(&fade_state, &ctx, NUM_LEDS, initialColor, 20);
 
   anim_sequence_fade_state_t sequence_fade_state = {0};
-  anim_sequence_fade_init(&ctx, &sequence_fade_state, 0, 59, 0, 5, 5, initialColor);
+  // anim_sequence_fade_init(&ctx, &sequence_fade_state, 0, 59, 0, 5, 5, initialColor);
 
   while (1) {
     anim_startup_tick(&startup_state);

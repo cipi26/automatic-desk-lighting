@@ -4,8 +4,8 @@
 
 typedef struct {
   led_ctx_t *ctx;
-  anim_sequence_state_t left_side;
-  anim_sequence_state_t right_side;
+  anim_sequence_fade_state_t left_side;
+  anim_sequence_fade_state_t right_side;
   anim_status_t status;
 } anim_startup_state_t;
 
