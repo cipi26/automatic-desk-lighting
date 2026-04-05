@@ -46,7 +46,8 @@ void leds_task(void *pvParameters) {
   // fade_leds_init(&fade_state, &ctx, NUM_LEDS, initialColor, 20);
 
   anim_sequence_fade_state_t sequence_fade_state = {0};
-  // anim_sequence_fade_init(&ctx, &sequence_fade_state, 0, 59, 0, 5, 5, initialColor);
+  // anim_sequence_fade_init(&ctx, &sequence_fade_state, 0, 59, 0, 5, 5,
+  // initialColor);
 
   while (1) {
     anim_startup_tick(&startup_state);
